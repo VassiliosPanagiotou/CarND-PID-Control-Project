@@ -32,8 +32,29 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-  // TODO: Initialize the pid variable.
+  ////////////
+  // The coefficient/parameter initialization could be given by command line for circumventing building every time we want to adjust (as suggested by dsilver).
+  // Left that out since building is fast at my machine :-)
+  ////////////
+
+  // Values from the lesson - no to bad :-)
+  //double init_Kp = 0.2;
+  //double init_Ki = 0.0004;
+  //double init_Kd = 3.0;
+
+  double init_Kp = 0.22;
+  double init_Ki = 0.000525;
+  double init_Kd = 3.1;
+
+  //double init_Kp = 0.22;
+  //double init_Ki = 0.00009;
+  //double init_Kd = 3.1;
+
+  // Flag for running twiddle
+  bool runTwiddle = false;
+
+  // Initialize the pid variable.
+  PID pid(init_Kp, init_Ki, init_Kd, runTwiddle);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -50,14 +71,16 @@ int main()
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
-          double steer_value;
           /*
-          * TODO: Calcuate steering value here, remember the steering value is
+          * Calcuate steering value here, remember the steering value is
           * [-1, 1].
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
+		  double steer_value = pid.getSteerValue(cte);
+		  if (steer_value < -1.0) steer_value = -1.0;
+		  if (steer_value >  1.0) steer_value = 1.0;
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
